@@ -1,1 +1,33 @@
-
+// Jenkins pipeline script
+Groovy script
+node
+{    
+def mavenHome = tool name: "maven3.6.3"    
+stage('1. CodeClone' )
+{
+git credentialsId: 'Github_credentials', url: 'https://github.com/myLandmarktechboot/maven-web-app.git'
+}
+stage('2. Build')
+{
+sh "${mavenHome}/bin/mvn package"
+}
+Stage('3. CodeQuality')
+{
+sh "${mavenHome}/bin/mvn sonar:sonar"    
+}
+stage('4.UploadNexus')
+{
+sh "${mavenHome}/bin/mvn deploy"    
+}
+stage('5. Approval')
+{
+echo "Approved. Ready for deployment"    
+}
+stage('6. DEployTomcat')
+{
+deploy adapters: [tomcat9(credentialsId: 'Tomcat-Credentials', path: '', url: 'http://3.239.182.79:8080/')], contextPath: null, war: 'target/*WAR'    
+}
+stage('7. Notification')
+{
+emailext body: 'see below', recipientProviders: [developers()], subject: 'update', to: 'whom it may concern'	
+}
